@@ -1,0 +1,39 @@
+{
+  "variables": {
+    "vcenter_server": "",
+    "username": "",
+    "password": ""
+  },
+  "builders": [
+    {
+      "type": "vsphere-clone",
+      "vcenter_server": "{{user `vcenter_server`}}",
+      "username": "{{user `username`}}",
+      "password": "{{user `password`}}",
+      "template": "centos7_min_1908",
+      "vm_name": "p_centos7_min_cloudinit_010420",
+      "convert_to_template": "true",
+      "cluster": "Kakadu",
+      "datastore":"vsanDatastore_Kakadu",
+      "folder": "Templates",
+      "network": "kd_mgmt_192.168.200.0",
+      "ssh_username": "root",
+      "ssh_password": "",
+      "CPUs": 1,
+      "RAM": 2048,
+      "disk_size": 20480
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo yum upgrade -y",
+        "sudo yum install -y cloud-init",
+        "sudo yum install -y perl",
+        "sed -ie 's/disable_vmware_customization: false/disable_vmware_customization: true/g' /etc/cloud/cloud.cfg",
+        "echo 'network: {config: disabled}' > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg"
+      ]
+    }
+  ]
+}

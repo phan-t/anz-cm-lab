@@ -1,0 +1,36 @@
+{
+  "variables": {
+    "vcenter_server": "cmsydprdvc001.mgmt.cmlab.local",
+    "username": "svc_mgmt_vra@mgmt.cmlab.local",
+    "password": "cmVMware1!"
+  },
+  "builders": [
+    {
+      "type": "vsphere-clone",
+      "vcenter_server": "{{user `vcenter_server`}}",
+      "username": "{{user `username`}}",
+      "password": "{{user `password`}}",
+      "template": "win2019_dc_nov_2019",
+      "vm_name": "p_win2019_dc_210520",
+      "convert_to_template": "true",
+      "cluster": "Kakadu",
+      "datastore":"vsanDatastore_Kakadu",
+      "folder": "Templates",
+      "network": "kd_mgmt_192.168.200.0",
+      "communicator": "winrm",
+      "winrm_username": "administrator",
+      "winrm_password": "cmVMware1!",
+      "winrm_insecure": "true",
+      "CPUs": 1,
+      "RAM": 4096,
+      "disk_size": 40960
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "powershell",
+      "inline": [""
+      ]
+    }
+  ]
+}

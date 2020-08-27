@@ -1,0 +1,49 @@
+name: Folding@Home
+version: 1.0
+formatVersion: 1
+inputs:
+  count:
+    type: integer
+    default: 4
+    minimum: 1
+    maximum: 8
+    title: Number of Folding@Home nodes
+    description: Number of Folding@Home nodes
+resources:
+  Cloud_Machine_1:
+    type: Cloud.Machine
+    properties:
+      count: ${input.count}
+      image: centos7
+      flavor: folding@home
+      networks:
+        - network: '${resource.Cloud_Network_1.id}'
+          assignment: static
+      storage:
+        constraints:
+          - tag: 'environment:folding@home'
+      cloudConfig: |
+        #cloudconfig
+        repo_update: true
+        repo_upgrade: all
+        package_update: true
+        package_upgrade: all
+
+        packages:
+         - wget
+
+        runcmd:
+         - wget https://download.foldingathome.org/releases/public/release/fahclient/centos-5.3-64bit/v7.4/fahclient-7.4.4-1.x86_64.rpm
+         - rpm -i --nodeps fahclient-7.4.4-1.x86_64.rpm
+         - wget -q https://raw.githubusercontent.com/phan-t/anz-cm-lab/master/foldingathome/config.xml -O /etc/fahclient/config.xml
+         - /etc/init.d/FAHClient restart
+      constraints:
+        - tag: 'platform:vsphere'
+        - tag: 'region:sydney'
+        - tag: 'environment:folding@home'
+  Cloud_Network_1:
+    type: Cloud.Network
+    properties:
+      networkType: existing
+      constraints:
+        - tag: 'environment:test'

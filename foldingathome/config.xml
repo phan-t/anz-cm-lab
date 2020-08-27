@@ -1,0 +1,29 @@
+<config>
+  <!-- Folding Slot Configuration -->
+  <gpu v="false"/>
+  
+  <!-- Slot Control -->
+  <power v="medium"/>
+  
+  <!-- User Information -->
+  <passkey v="225ac49d4dc97249225ac49d4dc97249"/>
+  <team v="52737"/>
+  <user v="pegasus"/>
+  
+  <!-- Network -->
+  <proxy-enable v="false"/>
+  <proxy v=""/>
+  <proxy-user v=""/>
+  <proxy-pass v=""/>
+  
+  <!-- Folding Slots -->
+  <slot id='0' type='CPU'/>
+  <client-type v="bigadv"/>
+  
+  <!-- Remote Command Server -->
+  <command-allow v="127.0.0.1 0.0.0.0/0"/>
+  <password v="VMware1!"/>
+  
+  <!-- Web Server -->
+  <web-allow v="0.0.0.0/0"/>
+</config>
