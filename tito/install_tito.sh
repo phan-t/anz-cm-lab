@@ -45,7 +45,11 @@ EOF
 
 # Install tito
 git clone https://github.com/phan-t/anz-cm-lab.git /var/tmp/anz-cm-lab
+<<<<<<< HEAD
 cp -a /var/tmp/anz-cm-lab/tito/var/www/html /var/www
+=======
+cp -a /var/tmp/anz-cm-lab/tito/var/www /var/www/html
+>>>>>>> 3246506f968d778605427020ba8ca6b18f3904f9
 cd /var/www/html
 
 
