@@ -1,0 +1,133 @@
+name: Tito
+version: 1.0
+formatVersion: 1
+inputs:
+  platform:
+    type: string
+    title: Platform
+    oneOf:
+      - title: vSphere
+        const: 'platform:vsphere'
+    default: 'platform:vsphere'
+  frontend_count:
+    type: integer
+    title: Frontend Count
+    enum:
+      - 1
+      - 2
+      - 3
+    default: 1
+  environment:
+    type: string
+    title: Environment
+    oneOf:
+      - title: Test
+        const: 'environment:test'
+    default: 'environment:test'
+resources:
+  LoadBalancer:
+    type: Cloud.LoadBalancer
+    properties:
+      count: '${input.frontend_count > 1 ? 1 : 0}'
+      routes:
+        - protocol: HTTP
+          port: '80'
+          instanceProtocol: HTTP
+          instancePort: '80'
+          healthCheckConfiguration:
+            protocol: HTTP
+            port: '80'
+            urlPath: /
+            intervalSeconds: 60
+            timeoutSeconds: 30
+            unhealthyThreshold: 10
+            healthyThreshold: 2
+      network: '${resource.Network.id}'
+      instances: '${resource.Frontend[*].id}'
+      internetFacing: true
+  Frontend:
+    type: Cloud.Machine
+    dependsOn:
+      - Database
+    count: '${FrontEndNumber}'
+    properties:
+      image: centos7
+      flavor: small
+      remoteAccess:
+        authentication: usernamePassword
+        username: tphan
+        password: VMware1!
+      networks:
+        - network: '${resource.Network.id}'
+          assignment: static
+      constraints:
+        - tag: '${input.platform}'
+        - tag: 'region:sydney'
+        - tag: '${input.environment}'
+      cloudConfig: |
+        packages:
+          - git
+        runcmd:
+          - sudo systemctl stop firewalld
+          - sudo systemctl disable firewalld
+          - sudo setenforce 0
+          - cd /var/tmp
+          - curl -O https://raw.githubusercontent.com/phan-t/anz-cm-lab/master/tito/install_tito.sh
+          - chmod 755 install_tito.sh
+          - /var/tmp/install_tito.sh ${resource.Database.networks[0].address}
+      count: '${input.frontend_count}'
+  Database:
+    type: Cloud.Machine
+    properties:
+      image: centos7
+      flavor: small
+      remoteAccess:
+        authentication: usernamePassword
+        username: tphan
+        password: VMware1!
+      networks:
+        - network: '${resource.Network.id}'
+          assignment: static
+      constraints:
+        - tag: '${input.platform}'
+        - tag: 'region:sydney'
+        - tag: '${input.environment}'
+      cloudConfig: |
+        packages:
+          - mysql
+          - mariadb-server
+          - mariadb
+        runcmd:
+          - sudo systemctl stop firewalld
+          - sudo systemctl disable firewalld
+          - sudo setenforce 0
+          - exec &> /tmp/tito_db.log
+          - sudo systemctl enable mariadb.service
+          - sudo systemctl start mariadb.service
+          - mysql -u root << EOF
+          - USE mysql;
+          - SELECT user,host FROM user;
+          - GRANT ALL PRIVILEGES ON *.* TO root@'%' WITH GRANT OPTION;
+          - EOF
+        #to update the root password
+          - sudo systemctl stop mariadb.service
+          - sudo mysqld_safe --skip-grant-tables &
+          - sleep 5
+          - mysql -v -u root << EOF
+          - UPDATE mysql.user SET Password=PASSWORD('Tito2016') WHERE User='root';
+          - FLUSH PRIVILEGES;
+          - EOF
+          - sudo mysqladmin -u root -pTito2016 shutdown
+          - sudo systemctl start mariadb.service
+        #create conf DB and table
+          - mysql -u root -pTito2016 << EOF
+          - create database if not exists TitoDB;
+          - use TitoDB;
+          - CREATE TABLE TitoTable (id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, home VARCHAR(50) NOT NULL, work VARCHAR(50) NOT NULL, hour_home_departure VARCHAR(50) NOT NULL, hour_work_departure VARCHAR(50) NOT NULL)
+          - EOF
+  Network:
+    type: Cloud.Network
+    properties:
+      networkType: existing
+      constraints:
+        - tag: 'environment:test'
